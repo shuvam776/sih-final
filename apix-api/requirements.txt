@@ -11,4 +11,5 @@ python-dotenv>=1.0.1
 apscheduler>=3.10.4
 openpyxl>=3.1.5
 greenlet>=3.0.3
+aiosqlite>=0.20.0
 PyYAML>=6.0.1
