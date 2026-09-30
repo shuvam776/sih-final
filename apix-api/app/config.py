@@ -25,7 +25,7 @@ class Settings(BaseSettings):
     RATE_LIMIT_AUTH: int = 600    # requests per minute
 
     BASE_PERIOD: str = "2025-01-01=100"
-    CORS_ORIGINS: str = '["http://localhost:3000","http://127.0.0.1:3000","http://localhost:3001","http://127.0.0.1:3001","http://localhost:3002","http://127.0.0.1:3002","http://localhost:3005","http://127.0.0.1:3005"]'
+    CORS_ORIGINS: str = '["http://localhost:3000","http://127.0.0.1:3000","https://sih-final-nu.vercel.app","http://localhost:3001","http://127.0.0.1:3001","http://localhost:3002","http://127.0.0.1:3002","http://localhost:3005","http://127.0.0.1:3005"]'
 
     _API_DIR = Path(__file__).resolve().parent.parent
     model_config = SettingsConfigDict(
