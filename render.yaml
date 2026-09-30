@@ -2,7 +2,7 @@ services:
   - type: web
     name: apix-api
     env: docker
-    dockerfilePath: apix-api/Dockerfile
+    dockerfilePath: Dockerfile
     dockerContext: .
     plan: free
     healthCheckPath: /api/health
