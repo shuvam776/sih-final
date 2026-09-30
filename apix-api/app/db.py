@@ -64,15 +64,31 @@ async def get_db() -> AsyncGenerator[AsyncSession, None]:
 
 
 async def init_db():
-    """Create the PostgreSQL schema and seed data."""
-    async with engine.begin() as conn:
-        await conn.run_sync(Base.metadata.create_all)
-        if engine.dialect.name == "postgresql":
-            # Legacy builds seeded unprovenanced, fabricated backtest values. Remove
-            # them before requiring a dataset reference on every benchmark record.
-            await conn.execute(text("ALTER TABLE backtest_records ADD COLUMN IF NOT EXISTS dataset_id VARCHAR(36)"))
-            await conn.execute(text("DELETE FROM backtest_records WHERE dataset_id IS NULL"))
-            await conn.execute(text("ALTER TABLE backtest_records ALTER COLUMN dataset_id SET NOT NULL"))
+    """Create the database schema and seed data with fallback for unreachable remote DBs."""
+    global engine, AsyncSessionLocal
+    try:
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
+            if engine.dialect.name == "postgresql":
+                await conn.execute(text("ALTER TABLE backtest_records ADD COLUMN IF NOT EXISTS dataset_id VARCHAR(36)"))
+                await conn.execute(text("DELETE FROM backtest_records WHERE dataset_id IS NULL"))
+                await conn.execute(text("ALTER TABLE backtest_records ALTER COLUMN dataset_id SET NOT NULL"))
+    except Exception as exc:
+        print(f"WARNING: Primary database connection ({settings.DATABASE_URL[:25]}...) failed: {exc}. Falling back to SQLite.")
+        engine = create_async_engine(
+            "sqlite+aiosqlite:///./apix.db",
+            echo=False,
+            future=True,
+        )
+        AsyncSessionLocal = async_sessionmaker(
+            bind=engine,
+            class_=AsyncSession,
+            expire_on_commit=False,
+            autocommit=False,
+            autoflush=False,
+        )
+        async with engine.begin() as conn:
+            await conn.run_sync(Base.metadata.create_all)
 
     async with AsyncSessionLocal() as session:
         # Check if routes already exist
